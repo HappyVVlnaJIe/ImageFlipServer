@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    std::vector<uchar> response_image_buffer;
+    std::vector<uchar> response_image_buffer; // TODO: add _ to param
     // Сокет для текущего подключенного клиента
     tcp::socket socket;
 
