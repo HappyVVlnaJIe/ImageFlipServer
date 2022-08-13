@@ -8,10 +8,6 @@
 #include <memory>
 #include <string>
 
-// TODO: ask about opencv using
-
-
-
 class BaseServer {
 public:
     void Start(tcp::acceptor& acceptor, tcp::socket& socket); 
