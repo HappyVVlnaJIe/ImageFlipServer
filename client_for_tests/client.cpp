@@ -25,55 +25,68 @@ void ClientForTests::FlipTest()
     using namespace cv;
     const std::string test_image_path = samples::findFile("../images/test_image.jpg");
     const int version = 11;
+    char const* target = "/";
 
     Mat test_image = imread(test_image_path, IMREAD_COLOR);
     Mat flip_image;
     flip(test_image, flip_image, 0);
 
+    imwrite("../images/flip_image.jpg", flip_image); // TODO: убрать
+
     tcp::socket socket(Connect());
 
-    // Set up an HTTP GET request message
-    http::file_body::value_type body;
-    beast::error_code ec;
-    body.open(test_image_path.c_str(), beast::file_mode::read, ec);
-    auto const size = body.size();
+    std::vector<uchar> req_image_buffer;
+    imencode(".jpg", test_image, req_image_buffer);
 
-    http::request<http::file_body> req;
-    req.method(http::verb::post);
+    http::request<http::dynamic_body> req;
     req.version(version);
+    req.method(http::verb::post);
+    req.target(target);
     req.set(http::field::host, host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.body() = std::move(body);
+    req.set(http::field::content_type, "image/jpeg");
+    req.content_length(req_image_buffer.size());
+    for (int i=0; i< req_image_buffer.size();i ++)
+    {
+        beast::ostream(req.body()) << req_image_buffer[i];
+    }
 
     // Send the HTTP request to the remote host
-    http::request_serializer<http::file_body,  http::fields> sr{req};
-    http::write(socket, sr);
+    http::write(socket, req);
     std::cout << "send image in flip test" << std::endl; // TODO: убрать
 
     boost::beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
     http::read(socket, buffer, res);
-    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 
     std::cout << "read image in test" << std::endl; // TODO: убрать
     std::string raw_data = buffers_to_string(res.body().data());
+    std::cout << "try create res_image" << std::endl; // TODO: убрать
     Mat res_image(cv::imdecode(std::vector<char>(raw_data.begin(), raw_data.end()), cv::IMREAD_ANYCOLOR));  
+    
     Mat diff;
+    std::cout << "try DIFF" << std::endl; // TODO: убрать
     absdiff(flip_image, res_image, diff);
-    if (countNonZero(diff) != 0)
-    {
-        std::cout << "flip image test fall" << std::endl;
-    }
-    else 
+    std::cout << "res_image is empty " << res_image.empty() << std::endl; // TODO: убрать
+    std::cout << "diff is empty " << diff.empty() << std::endl; // TODO: убрать
+
+    imwrite("../images/res_image.jpg", res_image); // TODO: убрать
+    imwrite("../images/diff_image.jpg", diff); // TODO: убрать
+    
+    if (countNonZero(diff) == 0)
     {
         std::cout << "flip image test ok" << std::endl;
     }
-
+    else 
+    {
+        std::cout << "flip image test fall" << std::endl;
+    }
+    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 }
 
 void ClientForTests::WrongRequestMethodTest()
 {
-    std::cout << "start wrong request method test" << std::endl;
+    std::cout << "wrong request method test start" << std::endl;
     const std::string target = "/echo?input=test";
     const std::string expected_response = "Invalid request-method 'GET'";
     const int version = 11;
@@ -95,9 +108,6 @@ void ClientForTests::WrongRequestMethodTest()
     http::response<http::dynamic_body> res;
     http::read(socket, buffer, res);
 
-    // Закрываем соединение
-    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-
     if (buffers_to_string(res.body().data()) != "Invalid request-method 'GET'")
     {
         std::cout << "wrong request method test fall" << std::endl;
@@ -106,6 +116,10 @@ void ClientForTests::WrongRequestMethodTest()
     {
         std::cout << "wrong request method test ok" << std::endl;
     }
+
+    // Закрываем соединение
+    socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+
 }
 
 void ClientForTests::RunAllTests()
