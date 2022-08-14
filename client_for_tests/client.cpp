@@ -32,35 +32,37 @@ void ClientForTests::FlipTest()
 
     tcp::socket socket(Connect());
 
-    std::vector<uchar> req_image_buffer;
-    imencode(".jpg", test_image, req_image_buffer);
     // Set up an HTTP GET request message
-    http::request<http::dynamic_body> req;
-    req.version(version);
+    http::file_body::value_type body;
+    beast::error_code ec;
+    body.open(test_image_path.c_str(), beast::file_mode::read, ec);
+    auto const size = body.size();
+
+    http::request<http::file_body> req;
     req.method(http::verb::post);
+    req.version(version);
     req.set(http::field::host, host_);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-    req.set(http::field::content_length, req_image_buffer.size());
-    for (int i=0; i< req_image_buffer.size();i ++)
-    {
-        beast::ostream(req.body()) << req_image_buffer[i];
-    }
+    req.body() = std::move(body);
 
     // Send the HTTP request to the remote host
-    http::write(socket, req);
+    http::request_serializer<http::file_body,  http::fields> sr{req};
+    http::write(socket, sr);
+    std::cout << "send image in flip test" << std::endl; // TODO: убрать
 
     boost::beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
     http::read(socket, buffer, res);
     socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 
+    std::cout << "read image in test" << std::endl; // TODO: убрать
     std::string raw_data = buffers_to_string(res.body().data());
     Mat res_image(cv::imdecode(std::vector<char>(raw_data.begin(), raw_data.end()), cv::IMREAD_ANYCOLOR));  
     Mat diff;
     absdiff(flip_image, res_image, diff);
     if (countNonZero(diff) != 0)
     {
-        std::cout << "flip image test bad" << std::endl;
+        std::cout << "flip image test fall" << std::endl;
     }
     else 
     {
@@ -93,14 +95,12 @@ void ClientForTests::WrongRequestMethodTest()
     http::response<http::dynamic_body> res;
     http::read(socket, buffer, res);
 
-    std::cout << res << std::endl;
-
     // Закрываем соединение
     socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 
-    if (buffers_to_string(res.body().data()) != "")
+    if (buffers_to_string(res.body().data()) != "Invalid request-method 'GET'")
     {
-        std::cout << "wrong request method test bad" << std::endl;
+        std::cout << "wrong request method test fall" << std::endl;
     }
     else 
     {
@@ -110,6 +110,6 @@ void ClientForTests::WrongRequestMethodTest()
 
 void ClientForTests::RunAllTests()
 {
-    FlipTest();
     WrongRequestMethodTest();
+    FlipTest();
 }

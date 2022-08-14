@@ -16,18 +16,21 @@ void HttpConnection::ReadRequest()
             {
                 self->ProcessRequest();
             }
+            std::cout << ec << std::endl; //TODO: убрать
         }
     );
 }
 
 void HttpConnection::ProcessRequest()
 {
+    std::cout << "start ProcessRequest" << std::endl; //TODO: убрать
     response.version(request.version());
     response.keep_alive(false);
 
     switch(request.method())
     {
         case http::verb::post:
+             std::cout << "start CreateResponse" << std::endl; //TODO: убрать
             CreateResponse();
             break;
 
@@ -46,9 +49,10 @@ void HttpConnection::ProcessRequest()
 
 void HttpConnection::FlipImage()
 {
+    std::cout << "start flip image" << std::endl; //TODO: убрать
     std::string raw_data = buffers_to_string(request.body().data());
     cv::Mat request_image(cv::imdecode(std::vector<char>(raw_data.begin(), raw_data.end()), cv::IMREAD_ANYCOLOR));              
-    cv::Mat image;               
+    cv::Mat image;               //TODO: добавить проверку на содержимое запроса
     cv::flip(request_image, image, 0);
     cv::imencode(".jpg", image, response_image_buffer);
 }
@@ -57,6 +61,7 @@ void HttpConnection::CreateResponse()
 {
     FlipImage();
 
+    std::cout << "start create response" << std::endl; //TODO: убрать
     response.result(http::status::ok);
     response.set(http::field::server, "ImageFlipServer");
     response.set(http::field::content_type, "image/jpeg");
@@ -81,6 +86,7 @@ void HttpConnection::WriteResponse()
             self->deadline.cancel();
         }
     );
+    std::cout << "send image" << std::endl; //TODO: убрать
 }
 
 
