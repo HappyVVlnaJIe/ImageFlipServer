@@ -1,11 +1,11 @@
 #include "server.h"
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     try
     {
-        // Check command line arguments.
-        if(argc != 3)
+        // Проверка аргументов из командной строки
+        if (argc != 3)
         {
             std::cerr << "Usage: " << argv[0] << " <address> <port>\n";
             std::cerr << "  For IPv4, try:\n";
@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 
         ioc.run();
     }
-    catch(std::exception const& e)
+    catch (std::exception const &e)
     {
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;

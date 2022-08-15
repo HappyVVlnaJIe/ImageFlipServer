@@ -27,19 +27,20 @@ namespace ImageFlipServer
         void start();
 
     private:
-        std::vector<uchar> response_image_buffer;
         // Сокет для текущего подключенного клиента
         tcp::socket socket;
 
-        beast::flat_buffer buffer{buffer_size};
+        beast::flat_buffer buffer{buffer_size}; // все константы прописаны в constants.h
 
         http::request<http::dynamic_body> request;
 
         http::response<http::dynamic_body> response;
 
+        std::vector<uchar> response_image_buffer;
+
         // Таймер на обработку соединения
         net::steady_timer deadline{
-            socket.get_executor(), deadline_time};
+            socket.get_executor(), deadline_time}; // все константы прописаны в constants.h
 
         // Асинхронное получение запроса
         void ReadRequest();
@@ -47,7 +48,7 @@ namespace ImageFlipServer
         // Обработка запроса
         void ProcessRequest();
 
-        // Работа с изображением изображения
+        // Отзеркаливание изображения
         void FlipImage();
 
         // Формирование ответа

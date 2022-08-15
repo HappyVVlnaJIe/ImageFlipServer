@@ -7,6 +7,7 @@ namespace ImageFlipServer
         ReadRequest();
         CheckDeadline();
     }
+
     void HttpConnection::ReadRequest()
     {
         auto self = shared_from_this();
