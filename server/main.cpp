@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
         tcp::acceptor acceptor{ioc, {address, port}};
         tcp::socket socket{ioc};
-        BaseServer server;
+        ImageFlipServer::BaseServer server;
         server.Start(acceptor, socket);
 
         ioc.run();
@@ -32,4 +32,5 @@ int main(int argc, char* argv[])
         std::cerr << "Error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+    return 0;
 }

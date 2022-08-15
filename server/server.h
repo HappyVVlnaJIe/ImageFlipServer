@@ -8,7 +8,11 @@
 #include <memory>
 #include <string>
 
-class BaseServer {
-public:
-    void Start(tcp::acceptor& acceptor, tcp::socket& socket); 
-};
+namespace ImageFlipServer
+{
+    class BaseServer
+    {
+    public:
+        void Start(tcp::acceptor &acceptor, tcp::socket &socket);
+    };
+}
